@@ -13,13 +13,16 @@ public:
     ~Polynomial();
 
     void clear();
-    void remove(size_t exp);
-    void set(size_t exp, double constant);
+    void remove(int exp);
+    void set(int exp, double constant);
 
-    double at(size_t exp) const;
-    double operator [](size_t exp) const;
+    void derivative();
+    double value(double x);
+
+    double at(int exp) const;
+    double operator [](int exp) const;
     size_t size() const;
-    std::pair<size_t, double> node(size_t index) const;
+    std::pair<int, double> node(size_t index) const;
 
     Polynomial& operator = (const Polynomial &other); // deep copy
 
@@ -37,7 +40,7 @@ private:
     
     struct LinkList
     {
-        size_t exp;
+        int exp;
         double constant;
         LinkList *nxt;
     }   m_data;

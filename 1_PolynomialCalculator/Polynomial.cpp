@@ -1,5 +1,6 @@
 #include "Polynomial.hpp"
 
+#include <math.h>
 #include <list>
 
 Polynomial::Polynomial()
@@ -36,7 +37,7 @@ void Polynomial::clear()
     m_data.nxt = nullptr;
 }
 
-void Polynomial::remove(size_t exp)
+void Polynomial::remove(int exp)
 {
     if (exp == 0)
     {
@@ -54,7 +55,7 @@ void Polynomial::remove(size_t exp)
     delete ptr;
 }
 
-void Polynomial::set(size_t exp, double constant)
+void Polynomial::set(int exp, double constant)
 {
     LinkList *ptr = &m_data, *ptrLast = nullptr;
     while (ptr != nullptr and ptr->exp < exp)
@@ -73,7 +74,30 @@ void Polynomial::set(size_t exp, double constant)
     }
 }
 
-double Polynomial::at(size_t exp) const
+void Polynomial::derivative()
+{
+    LinkList *ptr = &m_data;
+    while (ptr != nullptr)
+    {
+        ptr->constant *= ptr->exp --;
+        ptr = ptr->nxt;
+    }   
+}
+
+double Polynomial::value(double x)
+{
+    double value = 0;
+    LinkList *ptr = &m_data;
+    while (ptr != nullptr)
+    {
+        value += std::pow(x, ptr->exp) * ptr->constant;
+        ptr = ptr->nxt;
+    }
+    return value;
+}
+
+
+double Polynomial::at(int exp) const
 {
     const LinkList *ptr = &m_data;
     while (ptr != nullptr)
@@ -85,7 +109,7 @@ double Polynomial::at(size_t exp) const
     return 0.;
 }
 
-double Polynomial::operator [](size_t exp) const
+double Polynomial::operator [](int exp) const
 {
     return at(exp);
 }
@@ -102,7 +126,7 @@ size_t Polynomial::size() const
     return size;
 }
 
-std::pair<size_t, double> Polynomial::node(size_t index) const
+std::pair<int, double> Polynomial::node(size_t index) const
 {
     const LinkList *ptr = &m_data;
     for (size_t i = 0; i < index; ++ i)

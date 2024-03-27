@@ -122,7 +122,7 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
         else
         {
             size_t pos = str.find('x');
-            size_t exp = 0;
+            int exp = 0;
             double constant = 1.;
 
             try
@@ -355,6 +355,36 @@ int main(int argc, char const *argv[])
                 err(0, args[0]);
             else
                 PolyMap.erase(var);
+        }
+        else if (command == "d")
+        {
+            if (args.size() != 1)
+            {
+                err(4);
+                continue;
+            }
+            MapIterator var;
+            if (parseVariable(args[0], var))
+                var->second.derivative();
+        }
+        else if (command == "value" or command == "val")
+        {
+            if (args.size() != 2)
+            {
+                err(4);
+                continue;
+            }
+            MapIterator var;
+            if (!parseVariable(args[0], var)) continue;
+            try
+            {
+                double x = std::stod(args[1]);
+                std::cout << "value = " << var->second.value(x) << "\n";
+            }
+            catch(const std::invalid_argument& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
         }
         else if (command.size() and command != "exit")
             err(3, command);
