@@ -3,6 +3,7 @@
 #include <cctype>
 
 #include <vector>
+#include <stack>
 #include <map>
 
 #include "Polynomial.hpp"
@@ -47,19 +48,201 @@ bool parseVariable(std::string str, MapIterator &out_ptrPoly, bool creat = false
     if ((out_ptrPoly = PolyMap.find(str)) != PolyMap.end())
         return true;
 
-    if (!creat) return false;
+    if (!creat)
+    {
+        err(0, str);
+        return false;
+    }
     PolyMap.insert(std::make_pair(str, Polynomial()));
     out_ptrPoly = PolyMap.find(str);
     return true;
 }
 
+bool is_op(char c) { return c == '+' || c == '-' || c == '*'; }
+bool is_unary(char c) { return c == '+' || c == '-'; }
+int priority(char op)
+{
+    if (op < 0) return 3;
+    if (op == '+' || op == '-') return 1;
+    if (op == '*' || op == '/') return 2;
+    return -1;
+}
+
+void process_op(std::stack<Polynomial>& st, char op)
+{
+    if (op < 0)
+    {
+        Polynomial l = st.top(); st.pop();
+        switch (-op)
+        {
+            case '+': st.push(l); break;
+            case '-': st.push(-l); break;
+        }
+    }
+    else
+    {
+        Polynomial r = st.top(); st.pop();
+        Polynomial l = st.top(); st.pop();
+        switch (op)
+        {
+            case '+': st.push(l + r); break;
+            case '-': st.push(l - r); break;
+            case '*': st.push(l * r); break;
+        }
+    }
+}
+
 bool parseExpression(std::string str, Polynomial &out_Poly)
 {
+    size_t first = str.find_first_not_of(' ');
+    size_t last = str.find_last_not_of(' ');
+    str = str.substr(first, last - first + 1);
 
+    bool isContainExpression = false;
+    for (size_t i = 0; i < str.size(); ++ i)
+    {
+        if (is_op(str[i]) or str[i] == '(' or str[i] == ')')
+            isContainExpression = true;
+        else
+            continue;
+        while (str[i - 1] == ' ') str.erase(i - 1, 1), -- i;
+        while (str[i + 1] == ' ') str.erase(i + 1, 1);
+    }
+
+    if (!isContainExpression)
+    {
+        if (!str.size()) return false;
+        if (!std::isdigit(str[0]) and str[0] != 'x')
+        {
+            MapIterator var;
+            if (!parseVariable(str, var)) return false;
+            out_Poly = var->second;
+            return true;
+        }
+        else
+        {
+            size_t pos = str.find('x');
+            size_t exp = 0;
+            double constant = 1.;
+
+            try
+            {
+                std::string tmp;
+                if (pos != std::string::npos) tmp = str.substr(0, pos);
+                    else tmp = str;
+                if (!tmp.empty())
+                    constant = std::stod(tmp);
+                else
+                    constant = 1.;
+            }
+            catch (const std::invalid_argument& e)
+            {
+                err(2, str);
+                return false;
+            }
+            
+            if (pos != std::string::npos)
+            {
+                if (pos < str.size() - 1 and str[pos + 1] != '^')
+                {
+                    err(2, str);
+                    return false;
+                }
+                try
+                {
+                    if (pos < str.size() - 1)
+                    {
+                        std::string tmp = str.substr(pos + 2);
+                        exp = std::stoul(tmp);
+                    }
+                    else exp = 1;
+                }
+                catch (const std::invalid_argument& e)
+                {
+                    err(2, str);
+                    return false;
+                }
+            }
+            
+            out_Poly.clear();
+            out_Poly.set(exp, constant);
+            return true;
+        }
+    }
+    else
+    {
+        std::stack<Polynomial> st;
+        std::stack<char> op;
+        bool may_be_unary = true;
+
+        for (size_t i = 0; i < str.size(); ++ i) 
+        {
+            if (str[i] == '(')
+            {
+                op.push('(');
+                may_be_unary = true;
+            }
+            else if (str[i] == ')')
+            {
+                while (op.top() != '(')
+                {
+                    process_op(st, op.top());
+                    op.pop();
+                }
+                op.pop();
+                may_be_unary = false;
+            }
+            else if (is_op(str[i]))
+            {
+                char cur_op = str[i];
+                if (may_be_unary && is_unary(cur_op)) cur_op = -cur_op;
+                while (!op.empty() &&
+                        ((cur_op >= 0 && priority(op.top()) >= priority(cur_op)) ||
+                        (cur_op < 0 && priority(op.top()) > priority(cur_op)))) {
+                    process_op(st, op.top());
+                    op.pop();
+                }
+                op.push(cur_op);
+                may_be_unary = true;
+            }
+            else
+            {
+                std::string tmp; tmp.clear();
+                while (i < str.size() && !is_op(str[i]) && str[i] != '(' && str[i] != ')')
+                    tmp += str[i], ++ i;
+                -- i;
+
+                Polynomial poly;
+                if (!parseExpression(tmp, poly))
+                {
+                    err(2, tmp);
+                    return false;
+                }
+                st.push(poly);
+                may_be_unary = false;
+            }
+        }
+
+        while (!op.empty())
+        {
+            if (op.top() == '(' or op.top() == ')')
+            {
+                err(2, str);
+                return false;
+            }
+            process_op(st, op.top());
+            op.pop();
+        }
+        out_Poly = st.top();
+        return true;
+    }
+    return false;
 }
 
 void getCommand(std::string &command, std::vector<std::string> &args)
 {
+    command.clear(); args.clear();
+
     std::cout << "> ";
     std::string str;
     getline(std::cin, str);
@@ -70,7 +253,7 @@ void getCommand(std::string &command, std::vector<std::string> &args)
         pos < str.size() - 1 and str.find('=', pos + 1) == std::string::npos)
     {
         command = "=";
-        args.push_back(str.substr(0, pos - 1));
+        args.push_back(str.substr(0, pos));
         args.push_back(str.substr(pos + 1));
         return;
     }
@@ -127,7 +310,7 @@ int main(int argc, char const *argv[])
         {
             MapIterator var;
             Polynomial expression;
-            if (parseVariable(args[0], var, true) and parseExpression(args[1], expression))
+            if (parseExpression(args[1], expression) and parseVariable(args[0], var, true))
                 var->second = expression;
         }
         else if (command == "calc" or command == "c")
@@ -173,7 +356,7 @@ int main(int argc, char const *argv[])
             else
                 PolyMap.erase(var);
         }
-        else if (command.size())
+        else if (command.size() and command != "exit")
             err(3, command);
     }
     

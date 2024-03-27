@@ -9,6 +9,7 @@ class Polynomial
 public:
 
     Polynomial();
+    Polynomial(const Polynomial &other);
     ~Polynomial();
 
     void clear();

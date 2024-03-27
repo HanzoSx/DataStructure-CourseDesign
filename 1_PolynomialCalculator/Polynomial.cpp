@@ -9,6 +9,11 @@ Polynomial::Polynomial()
     m_data.nxt = nullptr;
 }
 
+Polynomial::Polynomial(const Polynomial &other) : Polynomial()
+{
+    *this = other;
+}
+
 Polynomial::~Polynomial()
 {
     clear();
@@ -21,13 +26,14 @@ void Polynomial::clear()
     ptrList.clear();
     while (ptr->nxt != nullptr)
     {
-        ptrList.push_front(ptr);
         ptr = ptr->nxt;
+        ptrList.push_front(ptr);
     }
     for (auto &it : ptrList)
         delete it->nxt;
 
     m_data.constant = 0.;
+    m_data.nxt = nullptr;
 }
 
 void Polynomial::remove(size_t exp)
@@ -179,6 +185,13 @@ Polynomial& Polynomial::operator *= (const Polynomial &other)
 
 void Polynomial::Print()
 {
+    for (size_t index = 1; index < size(); ++ index)
+        if (std::abs(node(index).second) < 1e-6)
+        {
+            remove(node(index).first);
+            -- index;
+        }
+
     for (size_t index = 0; index < size(); ++ index)
     {
         auto [exp, constant] = node(size() - index - 1);
@@ -195,4 +208,7 @@ void Polynomial::Print()
             std::cout << " ";
         }
     }
+
+    if (size() == 1 and std::abs(m_data.constant) < 1e-6)
+        std::cout << 0;
 }
