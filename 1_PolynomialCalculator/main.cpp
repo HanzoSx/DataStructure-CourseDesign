@@ -68,10 +68,11 @@ int priority(char op)
     return -1;
 }
 
-void process_op(std::stack<Polynomial>& st, char op)
+bool process_op(std::stack<Polynomial>& st, char op)
 {
     if (op < 0)
     {
+        if (st.size() < 1) return false;
         Polynomial l = st.top(); st.pop();
         switch (-op)
         {
@@ -81,6 +82,7 @@ void process_op(std::stack<Polynomial>& st, char op)
     }
     else
     {
+        if (st.size() < 2) return false;
         Polynomial r = st.top(); st.pop();
         Polynomial l = st.top(); st.pop();
         switch (op)
@@ -90,6 +92,7 @@ void process_op(std::stack<Polynomial>& st, char op)
             case '*': st.push(l * r); break;
         }
     }
+    return true;
 }
 
 bool parseExpression(std::string str, Polynomial &out_Poly)
@@ -136,7 +139,15 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
                 if (pos != std::string::npos) tmp = str.substr(0, pos);
                     else tmp = str;
                 if (!tmp.empty())
-                    constant = std::stod(tmp);
+                {
+                    size_t pos;
+                    constant = std::stod(tmp, &pos);
+                    if (pos < tmp.size())
+                    {
+                        err(2, tmp);
+                        return false;
+                    }
+                }
                 else
                     constant = 1.;
             }
@@ -158,7 +169,15 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
                     if (pos < str.size() - 1)
                     {
                         std::string tmp = str.substr(pos + 2);
-                        exp = std::stol(tmp);
+                        {
+                            size_t pos;
+                            exp = std::stol(tmp, &pos);
+                            if (pos < tmp.size())
+                            {
+                                err(2, tmp);
+                                return false;
+                            }
+                        }
                     }
                     else exp = 1;
                 }
@@ -189,10 +208,19 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
             }
             else if (str[i] == ')')
             {
-                while (op.top() != '(')
+                while (!op.empty() and op.top() != '(')
                 {
-                    process_op(st, op.top());
+                    if (!process_op(st, op.top()))
+                    {
+                        err(2, str);
+                        return false;
+                    }
                     op.pop();
+                }
+                if (op.empty())
+                {
+                    err(2, str);
+                    return false;
                 }
                 op.pop();
                 may_be_unary = false;
@@ -204,7 +232,11 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
                 while (!op.empty() &&
                         ((cur_op >= 0 && priority(op.top()) >= priority(cur_op)) ||
                         (cur_op < 0 && priority(op.top()) > priority(cur_op)))) {
-                    process_op(st, op.top());
+                    if (!process_op(st, op.top()))
+                    {
+                        err(2, str);
+                        return false;
+                    }
                     op.pop();
                 }
                 op.push(cur_op);
@@ -218,11 +250,7 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
                 -- i;
 
                 Polynomial poly;
-                if (!parseExpression(tmp, poly))
-                {
-                    err(2, tmp);
-                    return false;
-                }
+                if (!parseExpression(tmp, poly)) return false;
                 st.push(poly);
                 may_be_unary = false;
             }
@@ -235,7 +263,11 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
                 err(2, str);
                 return false;
             }
-            process_op(st, op.top());
+            if (!process_op(st, op.top()))
+            {
+                err(2, str);
+                return false;
+            }
             op.pop();
         }
         out_Poly = st.top();
@@ -260,6 +292,9 @@ void getCommand(std::string &command, std::vector<std::string> &args)
         command = "=";
         args.push_back(str.substr(0, pos));
         args.push_back(str.substr(pos + 1));
+        if (args[0].find_first_not_of(' ') == std::string::npos or
+            args[1].find_first_not_of(' ') == std::string::npos)
+            command = str;
         return;
     }
 
@@ -320,6 +355,11 @@ int main(int argc, char const *argv[])
         }
         else if (command == "calc" or command == "c")
         {
+            if (args.size() == 0)
+            {
+                err(4);
+                continue;
+            }
             std::string arg;
             arg.clear();
             for (auto it : args) arg += it;
@@ -383,7 +423,13 @@ int main(int argc, char const *argv[])
             if (!parseVariable(args[0], var)) continue;
             try
             {
-                double x = std::stod(args[1]);
+                size_t pos;
+                double x = std::stod(args[1], &pos);
+                if (pos < args[1].size())
+                {
+                    err(2, args[1]);
+                    continue;
+                }
                 std::cout << "value = " << var->second.value(x) << "\n";
             }
             catch(const std::invalid_argument& e)
