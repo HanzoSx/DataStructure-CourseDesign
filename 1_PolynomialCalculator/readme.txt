@@ -49,3 +49,94 @@ ERROR: Wrong number of parameters
 	将运算符与它的优先级视为一个整体，采用非递归的办法，直接根据运算符的优先级来分析与计算表达式
 	参考 OI-wiki 上的 "杂项-表达式求值"
 
+测试数据
+> calc (2x + 5x^8 - 3.1x^11)+(7-5x^8 + 11x^9)
+- 3.1 x^11 + 11 x^9 + 2 x + 7 
+
+> calc (6x^-3 - x + 4.4x^2 - 1.2x^9) - (-6x^-3 + 5.4x^2 - x^2 + 7.8x^15)
+- 7.8 x^15 - 1.2 x^9 - x + 12 x^-3 
+
+> calc (1+x+x^2+x^3+x^4+x^5)+(-x^3-x^4)
+x^5 + x^2 + x + 1 
+
+> calc (x+x^3) + (-x-x^3)
+0
+
+> calc (x+x^100)+(x^100+x^200)
+x^200 + 2 x^100 + x 
+
+> calc (x+x^2+x^3)+0
+x^3 + x^2 + x
+
+其他测试
+> a = x + 1
+> ls
+name      val
+a         x + 1 
+> b = x^2+2x
+> ls
+name      val
+a         x + 1 
+b         x^2 + 2 x 
+> calc a*b
+x^3 + 3 x^2 + 2 x 
+> calc a+b
+x^2 + 3 x + 1 
+> calc a-b
+- x^2 - x + 1 
+> calc b
+x^2 + 2 x 
+> d b
+> calc b
+2 x + 2 
+> d b  
+> calc b
+2 
+> d b
+> calc b
+0
+> c = x^-2 + x^2
+> ls
+name      val
+a         1 
+b         0
+c         x^2 + x^-2 
+> rm a
+> rm b
+> ls
+name      val
+c         x^2 + x^-2 
+> d c
+> ls
+name      val
+c         2 x - 2 x^-3 
+> d c
+> ls
+name      val
+c         2 + 6 x^-4 
+> d c
+> ls
+name      val
+c         - 24 x^-5 
+> d c
+> ls
+name      val
+c         120 x^-6 
+> a = x+1
+> b = x^2-1
+> calc a * (x - b * ( x^2 + 1 - a))
+- x^5 + 2 x^3 + x^2 
+> b = a * (a - 2)
+> ls
+name      val
+a         x + 1 
+b         x^2 - 1 
+c         120 x^-6 
+> val a 1
+value = 2
+> val b 0.5
+value = -0.75
+> val b 1.5
+value = 1.25
+> exit
+
