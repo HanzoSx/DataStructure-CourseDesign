@@ -43,7 +43,7 @@ private:
         int exp;
         double constant;
         LinkList *nxt;
-    }   m_data;
+    }   *m_data;
 
 };
 

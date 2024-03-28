@@ -101,13 +101,18 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
     bool isContainExpression = false;
     for (size_t i = 0; i < str.size(); ++ i)
     {
-        if (is_op(str[i]) or str[i] == '(' or str[i] == ')')
-            isContainExpression = true;
-        else
+        if (!(is_op(str[i]) or str[i] == '(' or str[i] == ')'))
             continue;
         while (str[i - 1] == ' ') str.erase(i - 1, 1), -- i;
         while (str[i + 1] == ' ') str.erase(i + 1, 1);
     }
+
+    std::vector<bool> notop(str.size(), false);
+    for (size_t i = 1; i < str.size(); ++ i)
+        if (str[i] == '-' and str[i-1] == '^')
+            notop[i] = true;
+        else if (is_op(str[i]) or str[i] == '(' or str[i] == ')')
+            isContainExpression = true;
 
     if (!isContainExpression)
     {
@@ -153,7 +158,7 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
                     if (pos < str.size() - 1)
                     {
                         std::string tmp = str.substr(pos + 2);
-                        exp = std::stoul(tmp);
+                        exp = std::stol(tmp);
                     }
                     else exp = 1;
                 }
@@ -192,7 +197,7 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
                 op.pop();
                 may_be_unary = false;
             }
-            else if (is_op(str[i]))
+            else if (is_op(str[i]) and !notop[i])
             {
                 char cur_op = str[i];
                 if (may_be_unary && is_unary(cur_op)) cur_op = -cur_op;
@@ -208,7 +213,7 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
             else
             {
                 std::string tmp; tmp.clear();
-                while (i < str.size() && !is_op(str[i]) && str[i] != '(' && str[i] != ')')
+                while (i < str.size() && !is_op(str[i]) && str[i] != '(' && str[i] != ')' || notop[i])
                     tmp += str[i], ++ i;
                 -- i;
 
