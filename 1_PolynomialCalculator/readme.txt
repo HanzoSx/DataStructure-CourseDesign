@@ -41,10 +41,62 @@ ERROR: Command not found [arg]
 ERROR: Wrong number of parameters
 	参数数量不正确
 
+程序结构
+	1_PolynomialCalcualtor
+	|	Polynomial.hpp
+	|	Polynomial.cpp
+	|		Polynomial 类的定义与实现
+	|	main.cpp
+	|		主函数
+	|		处理输入的命令
+	|	readme.txt
+	|		本文件
+
 算法细节
 多项式
 	多项式类 Polynomial 使用单链表存储多项式，节点以指数递增的顺序存储每一项的指数和常数
 	链表对外部不可见，保证指针正确被管理。接口支持修改与询问操作，重载了部分运算符
+
+  public:
+
+    Polynomial(); // 默认构造函数
+    Polynomial(const Polynomial &other); // 拷贝构造函数
+    ~Polynomial(); // 析构函数
+
+    void clear(); // 清空数据，使多项式为0
+    void remove(int exp); // 移除exp次项
+    void set(int exp, double constant); // 将exp次项常数部分设置为constant
+
+    void derivative(); // 求导
+    double value(double x); // 求实际值
+
+    double at(int exp) const; // 查询exp次项的常数部分
+    double operator [](int exp) const; // 重载[]，等价与at()
+    size_t size() const; // 项数
+    std::pair<int, double> node(size_t index) const; // 返回从低次项到高次项第index项的节点数据
+
+    Polynomial& operator = (const Polynomial &other); // 深拷贝
+
+    Polynomial operator + (const Polynomial &other) const; // 重载加法运算符
+    Polynomial operator - () const; // 重载一元减法运算符
+    Polynomial operator - (const Polynomial &other) const; // 重载二元减法运算符
+    Polynomial operator * (const Polynomial &other) const; // 重载乘法运算符
+    Polynomial& operator += (const Polynomial &other); // 重载+=
+    Polynomial& operator -= (const Polynomial &other); // 重载-=
+    Polynomial& operator *= (const Polynomial &other); // 重载*=
+
+    void Print(); // 输出类数学表达式
+    
+  private:
+    
+    struct LinkList
+    {
+        int exp;
+        double constant;
+        LinkList *nxt;
+    }   *m_data;
+
+
 表达式求值
 	将运算符与它的优先级视为一个整体，采用非递归的办法，直接根据运算符的优先级来分析与计算表达式
 	参考 OI-wiki 上的 "杂项-表达式求值"
