@@ -48,7 +48,7 @@ ERROR: Wrong number of parameters
 	|		Polynomial 类的定义与实现
 	|	main.cpp
 	|		主函数
-	|		处理输入的命令
+	|		处理输入的命令，管理多项式变量
 	|	readme.txt
 	|		本文件
 
@@ -56,6 +56,7 @@ ERROR: Wrong number of parameters
 多项式
 	多项式类 Polynomial 使用单链表存储多项式，节点以指数递增的顺序存储每一项的指数和常数
 	链表对外部不可见，保证指针正确被管理。接口支持修改与询问操作，重载了部分运算符
+	使用 map<string, Polynomial> 管理多项式变量的名称与值
 
   public:
 
