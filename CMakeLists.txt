@@ -3,3 +3,4 @@ project(DataStructor VERSION 0.1.0 LANGUAGES C CXX)
 
 add_subdirectory(1_PolynomialCalculator)
 add_subdirectory(2_SqStack)
+add_subdirectory(3_ExpressionClaculator)

@@ -6,7 +6,6 @@
 #include <stack>
 #include <map>
 
-#include "Polynomial.hpp"
 
 void err(size_t errid, std::string arg = "")
 {
@@ -15,15 +14,16 @@ void err(size_t errid, std::string arg = "")
         "Illegal variable name",
         "Illegal expression",
         "Command not found",
-        "Wrong number of parameters"
+        "Wrong number of parameters",
+        "div 0"
     };
     std::cout << "ERROR : " << errMsg[errid];
     if (arg.size()) std::cout << " : " << arg;
     std::cout << "\n";
 }
 
-typedef std::map<std::string, Polynomial>::iterator MapIterator;
-std::map<std::string, Polynomial> IntMap;
+typedef std::map<std::string, int>::iterator MapIterator;
+std::map<std::string, int> IntMap;
 bool parseVariable(std::string str, MapIterator &out_ptrPoly, bool creat = false)
 {
     // std::string LegalSpecialCh = "";
@@ -53,12 +53,12 @@ bool parseVariable(std::string str, MapIterator &out_ptrPoly, bool creat = false
         err(0, str);
         return false;
     }
-    IntMap.insert(std::make_pair(str, Polynomial()));
+    IntMap.insert(std::make_pair(str, int()));
     out_ptrPoly = IntMap.find(str);
     return true;
 }
 
-bool is_op(char c) { return c == '+' || c == '-' || c == '*'; }
+bool is_op(char c) { return c == '+' || c == '-' || c == '*' || c == '/'; }
 bool is_unary(char c) { return c == '+' || c == '-'; }
 int priority(char op)
 {
@@ -68,12 +68,12 @@ int priority(char op)
     return -1;
 }
 
-bool process_op(std::stack<Polynomial>& st, char op)
+bool process_op(std::stack<int>& st, char op)
 {
     if (op < 0)
     {
         if (st.size() < 1) return false;
-        Polynomial l = st.top(); st.pop();
+        int l = st.top(); st.pop();
         switch (-op)
         {
             case '+': st.push(l); break;
@@ -83,19 +83,27 @@ bool process_op(std::stack<Polynomial>& st, char op)
     else
     {
         if (st.size() < 2) return false;
-        Polynomial r = st.top(); st.pop();
-        Polynomial l = st.top(); st.pop();
+        int r = st.top(); st.pop();
+        int l = st.top(); st.pop();
         switch (op)
         {
             case '+': st.push(l + r); break;
             case '-': st.push(l - r); break;
             case '*': st.push(l * r); break;
+            case '/':
+                if (r == 0)
+                {
+                    err(4);
+                    return false;
+                }
+                st.push(l / r);
+                break;
         }
     }
     return true;
 }
 
-bool parseExpression(std::string str, Polynomial &out_Poly)
+bool parseExpression(std::string str, int &out_Int)
 {
     size_t first = str.find_first_not_of(' ');
     size_t last = str.find_last_not_of(' ');
@@ -110,46 +118,35 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
         while (str[i + 1] == ' ') str.erase(i + 1, 1);
     }
 
-    std::vector<bool> notop(str.size(), false);
     for (size_t i = 1; i < str.size(); ++ i)
-        if (str[i] == '-' and str[i-1] == '^')
-            notop[i] = true;
-        else if (is_op(str[i]) or str[i] == '(' or str[i] == ')')
+        if (is_op(str[i]) or str[i] == '(' or str[i] == ')')
             isContainExpression = true;
 
     if (!isContainExpression)
     {
         if (!str.size()) return false;
-        if (!std::isdigit(str[0]) and str[0] != 'x')
+        if (!std::isdigit(str[0]))
         {
             MapIterator var;
             if (!parseVariable(str, var)) return false;
-            out_Poly = var->second;
+            out_Int = var->second;
             return true;
         }
         else
         {
-            size_t pos = str.find('x');
-            int exp = 0;
-            double constant = 1.;
-
+            int constant = 1;
             try
             {
-                std::string tmp;
-                if (pos != std::string::npos) tmp = str.substr(0, pos);
-                    else tmp = str;
-                if (!tmp.empty())
+                if (!str.empty())
                 {
                     size_t pos;
-                    constant = std::stod(tmp, &pos);
-                    if (pos < tmp.size())
+                    constant = std::stod(str, &pos);
+                    if (pos < str.size())
                     {
-                        err(2, tmp);
+                        err(2, str);
                         return false;
                     }
                 }
-                else
-                    constant = 1.;
             }
             catch (const std::invalid_argument& e)
             {
@@ -157,45 +154,13 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
                 return false;
             }
             
-            if (pos != std::string::npos)
-            {
-                if (pos < str.size() - 1 and str[pos + 1] != '^')
-                {
-                    err(2, str);
-                    return false;
-                }
-                try
-                {
-                    if (pos < str.size() - 1)
-                    {
-                        std::string tmp = str.substr(pos + 2);
-                        {
-                            size_t pos;
-                            exp = std::stol(tmp, &pos);
-                            if (pos < tmp.size())
-                            {
-                                err(2, tmp);
-                                return false;
-                            }
-                        }
-                    }
-                    else exp = 1;
-                }
-                catch (const std::invalid_argument& e)
-                {
-                    err(2, str);
-                    return false;
-                }
-            }
-            
-            out_Poly.clear();
-            out_Poly.set(exp, constant);
+            out_Int = constant;
             return true;
         }
     }
     else
     {
-        std::stack<Polynomial> st;
+        std::stack<int> st;
         std::stack<char> op;
         bool may_be_unary = true;
 
@@ -225,7 +190,7 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
                 op.pop();
                 may_be_unary = false;
             }
-            else if (is_op(str[i]) and !notop[i])
+            else if (is_op(str[i]))
             {
                 char cur_op = str[i];
                 if (may_be_unary && is_unary(cur_op)) cur_op = -cur_op;
@@ -245,11 +210,11 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
             else
             {
                 std::string tmp; tmp.clear();
-                while (i < str.size() && !is_op(str[i]) && str[i] != '(' && str[i] != ')' || notop[i])
+                while (i < str.size() && !is_op(str[i]) && str[i] != '(' && str[i] != ')')
                     tmp += str[i], ++ i;
                 -- i;
 
-                Polynomial poly;
+                int poly;
                 if (!parseExpression(tmp, poly)) return false;
                 st.push(poly);
                 may_be_unary = false;
@@ -270,7 +235,7 @@ bool parseExpression(std::string str, Polynomial &out_Poly)
             }
             op.pop();
         }
-        out_Poly = st.top();
+        out_Int = st.top();
         return true;
     }
     return false;
@@ -349,7 +314,7 @@ int main(int argc, char const *argv[])
         if (command == "=")
         {
             MapIterator var;
-            Polynomial expression;
+            int expression;
             if (parseExpression(args[1], expression) and parseVariable(args[0], var, true))
                 var->second = expression;
         }
@@ -364,11 +329,10 @@ int main(int argc, char const *argv[])
             arg.clear();
             for (auto it : args) arg += it;
 
-            Polynomial expression;
+            int expression;
             if (parseExpression(arg, expression))
             {
-                expression.Print();
-                std::cout << "\n";
+                std::cout << expression << "\n";
             }
         }
         else if (command == "list" or command == "ls")
@@ -383,8 +347,7 @@ int main(int argc, char const *argv[])
             for (auto it : IntMap)
             {
                 std::cout << std::setw(10) << std::left << it.first;
-                it.second.Print();
-                std::cout << "\n";
+                std::cout << it.second << "\n";
             }
         }
         else if (command == "remove" or command == "rm")
@@ -400,42 +363,6 @@ int main(int argc, char const *argv[])
                 err(0, args[0]);
             else
                 IntMap.erase(var);
-        }
-        else if (command == "d")
-        {
-            if (args.size() != 1)
-            {
-                err(4);
-                continue;
-            }
-            MapIterator var;
-            if (parseVariable(args[0], var))
-                var->second.derivative();
-        }
-        else if (command == "value" or command == "val")
-        {
-            if (args.size() != 2)
-            {
-                err(4);
-                continue;
-            }
-            MapIterator var;
-            if (!parseVariable(args[0], var)) continue;
-            try
-            {
-                size_t pos;
-                double x = std::stod(args[1], &pos);
-                if (pos < args[1].size())
-                {
-                    err(2, args[1]);
-                    continue;
-                }
-                std::cout << "value = " << var->second.value(x) << "\n";
-            }
-            catch(const std::invalid_argument& e)
-            {
-                std::cerr << e.what() << '\n';
-            }
         }
         else if (command.size() and command != "exit")
             err(3, command);
