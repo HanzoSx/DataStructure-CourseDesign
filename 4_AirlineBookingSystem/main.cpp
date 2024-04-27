@@ -24,7 +24,7 @@ int main(int argc, char const *argv[])
     image.setViewSize(bgRect.getSize());
 
     page1.push_front(image);
-    float barw = 15;
+    float barw = 60;
     page1.setBarWidth(barw);
 
     while (window.isOpen())

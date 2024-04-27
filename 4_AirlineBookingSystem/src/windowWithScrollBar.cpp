@@ -36,6 +36,9 @@ void windowWithScrollBar::setSize(const sf::Vector2f size)
 
     m_heightbar.setSize(m_barWidth, m_size.y, m_barWidth, m_size.y * m_size.y / m_totalSize.y);
     m_widthbar.setSize(m_size.x, m_barWidth, m_size.x * m_size.x / m_totalSize.x, m_barWidth);
+
+    sf::Vector2f moffset = m_totalSize - m_size;
+    setViewOffset(sf::Vector2f(moffset.x * m_widthbar.getWidthScale(), moffset.y * m_heightbar.getHeightScale()));
 }
 
 void windowWithScrollBar::setTotalSize(const sf::Vector2f size)
@@ -63,6 +66,9 @@ void windowWithScrollBar::setTotalSize(const sf::Vector2f size)
 
     m_heightbar.setSize(m_barWidth, m_size.y, m_barWidth, m_size.y * m_size.y / m_totalSize.y);
     m_widthbar.setSize(m_size.x, m_barWidth, m_size.x * m_size.x / m_totalSize.x, m_barWidth);
+
+    sf::Vector2f moffset = m_totalSize - m_size;
+    setViewOffset(sf::Vector2f(moffset.x * m_widthbar.getWidthScale(), moffset.y * m_heightbar.getHeightScale()));
 }
 
 void windowWithScrollBar::setBarWidth(float width)
