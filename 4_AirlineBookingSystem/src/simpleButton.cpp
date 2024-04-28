@@ -14,6 +14,12 @@ simpleButton::simpleButton(float width, float height) : simpleButton(sf::Vector2
 {
 }
 
+void simpleButton::setSize(sf::Vector2f size)
+{
+    setViewSize(size);
+    m_shadowRect.setSize(size);
+}
+
 void simpleButton::setDrawable(sf::Drawable &drawable)
 {
     setSelectDrawable(drawable);

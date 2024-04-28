@@ -14,7 +14,7 @@ public:
     void book(Flight &flight, const std::array<int, 3> &seats);
     void cancel(Order &order);
 
-    const std::list<Order>& orders() const;
+    std::list<Order>& orders();
 
 private:
     

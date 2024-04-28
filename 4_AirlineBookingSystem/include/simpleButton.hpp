@@ -10,6 +10,8 @@ public:
     simpleButton(sf::Vector2f size);
     simpleButton(float width, float height);
 
+    void setSize(sf::Vector2f size);
+
     void setDrawable(sf::Drawable &drawable);
     void setSelectDrawable(sf::Drawable &drawable);
     void setUnselectDrawable(sf::Drawable &drawable);

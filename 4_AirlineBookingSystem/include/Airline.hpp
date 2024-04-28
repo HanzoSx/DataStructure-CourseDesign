@@ -11,6 +11,8 @@ public:
 
     AirPort(const std::string &name);
 
+    std::string getName() const;
+
 private:
     
     std::string m_name;
@@ -27,6 +29,9 @@ public:
     void addFlight(Flight &flight);
     const std::list<Flight> flight() const;
 
+    AirPort& getFrom() const;
+    AirPort& getTo() const;
+
 private:
     
     AirPort &m_AirportFrom, &m_AirportTo;
@@ -36,6 +41,8 @@ private:
 
 struct Time
 {
+    Time(int month, int day, int hour, int min, int sec) :
+    month(month), day(day), hour(hour), min(min), sec(sec){}
     int month, day, hour, min, sec;
 };
 
@@ -58,6 +65,13 @@ public:
 
     void book(Order &order);
     void cancel(Order &order);
+
+    const Airline& getAirline() const;
+    const Time getTakeoffTime() const;
+    const Time getArriveTime() const;
+    const std::string getFlightId() const;
+    const std::string getPlaneId() const;
+    const std::array<int, 3> getAviliableSeats() const;
 
 private:
     

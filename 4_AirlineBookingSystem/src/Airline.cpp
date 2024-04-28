@@ -6,6 +6,10 @@ m_name(name)
 {
 }
 
+std::string AirPort::getName() const
+{
+    return m_name;
+}
 
 Airline::Airline(AirPort &from, AirPort &to) :
 m_AirportFrom(from),
@@ -23,6 +27,16 @@ const std::list<Flight> Airline::flight() const
     return m_flight;
 }
 
+AirPort& Airline::getFrom() const
+{
+    return m_AirportFrom;
+}
+
+AirPort& Airline::getTo() const
+{
+    return m_AirportTo;
+}
+
 
 
 Flight::Flight(
@@ -33,12 +47,13 @@ Flight::Flight(
     const std::string &planeId,
     const std::array<int, 3> totalSeats
 ) : 
-m_airline   (airline),
-m_tTakeoff  (takeoff),
-m_tArrive   (arrive),
-m_flightId  (flightId),
-m_planeId   (planeId),
-m_totalSeats(totalSeats)
+m_airline    (airline),
+m_tTakeoff   (takeoff),
+m_tArrive    (arrive),
+m_flightId   (flightId),
+m_planeId    (planeId),
+m_totalSeats (totalSeats),
+m_bookedSeats({0, 0, 0})
 {
 }
 
@@ -75,7 +90,7 @@ void Flight::cancel(Order &order)
     for (auto i = m_orders.begin(); i != m_orders.end(); ++ i)
         if (*i == &order)
         {
-            auto &seats = order.getSeats();
+            auto &seats = (*i)->getSeats();
             m_bookedSeats[0] -= seats[0];
             m_bookedSeats[1] -= seats[1];
             m_bookedSeats[2] -= seats[2];
@@ -85,7 +100,7 @@ void Flight::cancel(Order &order)
     for (auto i = m_orders.begin(); i != m_orders.end(); ++ i)
         if ((*i)->isStandby())
         {
-            auto &seats = order.getSeats();
+            auto &seats = (*i)->getSeats();
             if (seats[0] + m_bookedSeats[0] <= m_totalSeats[0] &&
                 seats[1] + m_bookedSeats[1] <= m_totalSeats[1] &&
                 seats[2] + m_bookedSeats[2] <= m_totalSeats[2])
@@ -94,7 +109,42 @@ void Flight::cancel(Order &order)
                 m_bookedSeats[1] += seats[1];
                 m_bookedSeats[2] += seats[2];
                 order.setBooked();
+                (*i)->setBooked();
             }
             else break;
         }
 }
+
+const Airline& Flight::getAirline() const
+{
+    return m_airline;
+}
+
+const Time Flight::getTakeoffTime() const
+{
+    return m_tTakeoff;
+}
+
+const Time Flight::getArriveTime() const
+{
+    return m_tArrive;
+}
+
+const std::string Flight::getFlightId() const
+{
+    return m_flightId;
+}
+
+const std::string Flight::getPlaneId() const
+{
+    return m_planeId;
+}
+
+const std::array<int, 3> Flight::getAviliableSeats() const
+{
+    std::array<int ,3> arr;
+    for (size_t i = 0; i < 3; ++ i)
+        arr[i] = m_totalSeats[i] - m_bookedSeats[i];
+    return arr;
+}
+

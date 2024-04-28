@@ -23,7 +23,7 @@ void User::cancel(Order &order)
         }
 }
 
-const std::list<Order>& User::orders() const
+std::list<Order>& User::orders()
 {
     return m_orders;
 }
