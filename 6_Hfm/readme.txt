@@ -11,6 +11,16 @@
 	使用小根堆，每次取出两个最小元素新建共同父节点，权相加重新加入堆，直到堆只有一个节点，此节点即为哈夫曼树的根节点
 2.3 测试结果
 
+> build test.freqmap
+> t2c ASLNK
+Encoded: 1010001110110011011000011
+> c2t 1010001110110011011000011
+Decoded: ASLNK
+> t2f AIOSND ./code.bin
+Binary file saved successfully.
+> f2t ./code.bin
+Binary file loaded successfully.
+Decoded from file: AIOSND
 
 3 代码
 3.1 哈夫曼树类
