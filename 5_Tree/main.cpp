@@ -19,11 +19,16 @@ public:
 
     struct Date
     {
-        Date(int year, int month, int day) : year(year), month(month), day(day) {}
+        Date(int year = 0, int month = 0, int day = 0) : year(year), month(month), day(day) {}
         int year, month, day;
     };
 
-    People(const std::string &name, const Date &date);
+    People(const std::string &name, const Date &date = Date());
+
+    std::string get_name() const { return m_name; }
+    Date get_borndate() const { return m_borndate; }
+    Couple* get_couple() const { return m_couple; }
+    Couple* get_father() const { return m_father; }
 
 private:
 
@@ -37,7 +42,8 @@ private:
 People::People(const std::string &name, const Date &date) :
 m_name    (name),
 m_borndate(date),
-m_couple  (nullptr)
+m_couple  (nullptr),
+m_father  (nullptr)
 {
 }
 
@@ -58,6 +64,16 @@ Couple::Couple(People &people1, People &people2) :
 m_p1(&people1),
 m_p2(&people2)
 {
+}
+
+void err(size_t errid, std::string arg = "")
+{
+    static std::string errMsg[] = {
+        "Wrong number of parameters"
+    };
+    std::cout << "ERROR : " << errMsg[errid];
+    if (arg.size()) std::cout << " : " << arg;
+    std::cout << "\n";
 }
 
 void getCommand(std::string &command, std::vector<std::string> &args)
@@ -109,6 +125,9 @@ void getCommand(std::string &command, std::vector<std::string> &args)
     }
 }
 
+#include <map>
+std::map<std::string, People> pmap;
+
 int main(int argc, char const *argv[])
 {
     std::string command;
@@ -119,9 +138,35 @@ int main(int argc, char const *argv[])
         
         if (command == "add")
         {
+            if (args.size() != 1)
+            {
+                err(0);
+                continue;
+            }
+            if (pmap.count(args[0]))
+            {
+                err(1);
+                continue;
+            }
+            pmap.insert(std::pair(args[0], People(args[0])));
         }
         else if (command == "setf")
         {
+            if (args.size() != 1 and args.size() != 2)
+            {
+                err(0);
+                continue;
+            }
+            if (pmap.count(args[0]) == 0 or (args.size() == 2 and pmap.count(args[1]) == 0))
+            {
+                err(2);
+                continue;
+            }
+            if (pmap[args[1]].get_couple() == nullptr)
+            {
+                err(3);
+                continue;
+            }
         }
         else if (command == "setc")
         {
