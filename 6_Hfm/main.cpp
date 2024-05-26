@@ -20,34 +20,55 @@ void load_freqmap_from_file(const std::string &path, FreqMap &freqmap)
         freqmap.insert(std::make_pair(ch, freq));
     }
 }
+#include <fstream>
+#include <bitset>
+#include <vector>
 
 void save_bin_file(const std::string &path, const std::string &str) {
-    std::ofstream file(path, std::ios::binary);
-    if (file.is_open()) {
-        file.write(str.c_str(), str.size());
-        file.close();
-        std::cout << "Binary file saved successfully." << std::endl;
-    } else {
-        std::cerr << "Failed to save binary file." << std::endl;
+    std::ofstream outFile(path, std::ios::binary);
+    if (!outFile) {
+        throw std::runtime_error("Could not open file for writing");
+    }
+    
+    size_t str_length = str.length();
+    // Write original string length to the file
+    outFile.write(reinterpret_cast<const char*>(&str_length), sizeof(str_length));
+    
+    size_t full_bytes = str_length / 8;
+    size_t remaining_bits = str_length % 8;
+    
+    // Write full bytes
+    for (size_t i = 0; i < full_bytes; ++i) {
+        std::bitset<8> byte(str.substr(i * 8, 8));
+        outFile.put(static_cast<unsigned char>(byte.to_ulong()));
+    }
+    
+    // Write remaining bits if any
+    if (remaining_bits > 0) {
+        std::bitset<8> byte(str.substr(full_bytes * 8, remaining_bits));
+        outFile.put(static_cast<unsigned char>(byte.to_ulong()));
     }
 }
 
 void load_bin_file(const std::string &path, std::string &str) {
-    std::ifstream file(path, std::ios::binary | std::ios::ate);
-    if (file.is_open()) {
-        std::streamsize size = file.tellg();
-        file.seekg(0, std::ios::beg);
-
-        str.resize(size);
-        if (file.read(&str[0], size))
-            std::cout << "Binary file loaded successfully." << std::endl;
-        else
-            std::cerr << "Failed to load binary file." << std::endl;
-
-        file.close();
-    } else {
-        std::cerr << "Unable to open binary file." << std::endl;
+    std::ifstream inFile(path, std::ios::binary);
+    if (!inFile) {
+        throw std::runtime_error("Could not open file for reading");
     }
+    
+    // Read the original string length
+    size_t str_length;
+    inFile.read(reinterpret_cast<char*>(&str_length), sizeof(str_length));
+    
+    str.clear();
+    char byte;
+    while (inFile.get(byte)) {
+        std::bitset<8> bits(static_cast<unsigned char>(byte));
+        str += bits.to_string();
+    }
+    
+    // Trim the string to the original length
+    str = str.substr(0, str_length);
 }
 
 #include <vector>

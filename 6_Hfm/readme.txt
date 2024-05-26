@@ -4,21 +4,39 @@
 	1 从频率表文件生成哈夫曼树
 	2 text与code互相转化
 	3 以二进制格式存取文件
+	4 输出树结构、字符编码
 2.2 实现细节
-频率表存储
-	使用 std::map, 适应任意数量字符
+采用命令行，支持的命令：
+	build <file>
+		从文件读取频率表构建哈夫曼树
+	t2c <string>
+		text 转 code 字符串
+	t2f <string> <file>
+		text 转 code 二进制文件
+	c2t <string>
+		code 字符串转 text
+	f2t <string> <file>
+		code 二进制文件转 text
+	tree
+		输出哈夫曼树结构
+	chcode
+		输出字符编码
+频率表存储/读取
+	频率表支持从文件中读取，格式为一行一个字符：<char><freq>，读取直到文件结束
+	使用 std::map 存储, 适应任意数量字符
 哈夫曼树构建
-	使用小根堆，每次取出两个最小元素新建共同父节点，权相加重新加入堆，直到堆只有一个节点，此节点即为哈夫曼树的根节点
+	使用小根堆 std::priority_queue
+	每次取出两个最小元素新建共同父节点，权相加重新加入堆，直到堆只有一个节点，此节点即为哈夫曼树的根节点
 2.3 测试结果
 
-> build test.freqmap
-> t2c ASLNK
+> build test.freqmap // 从文件 test.freqmap 读取频率表并构建哈夫曼树
+> t2c ASLNK // 使用创建好的哈夫曼树转化
 Encoded: 1010001110110011011000011
 > c2t 1010001110110011011000011
 Decoded: ASLNK
-> t2f AIOSND ./code.bin
+> t2f AIOSND ./code.bin // 转化结果以二进制格式保存到文件
 Binary file saved successfully.
-> f2t ./code.bin
+> f2t ./code.bin // 从二进制文件读取并转化
 Binary file loaded successfully.
 Decoded from file: AIOSND
 
