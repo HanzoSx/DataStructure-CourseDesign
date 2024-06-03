@@ -46,16 +46,22 @@ int main(int argc, char const *argv[])
     savefile_button.setViewPosition(sf::Vector2f(200, 50));
     UIwindow.push_back(savefile_button);
 
-    sf::Text sortfile_text("SORT", font);
-    mid_text(sortfile_text, 40);
-    sfu::GoogleLikeButton sortfile_button(sortfile_text, 40);
-    sortfile_button.setViewPosition(sf::Vector2f(300, 50));
-    UIwindow.push_back(sortfile_button);
+    sf::Text sort_text("SORT1", font);
+    mid_text(sort_text, 50);
+    sfu::GoogleLikeButton sort_button(sort_text, 50);
+    sort_button.setViewPosition(sf::Vector2f(300, 40));
+    UIwindow.push_back(sort_button);
+
+    sf::Text sort2_text("SORT2", font);
+    mid_text(sort2_text, 50);
+    sfu::GoogleLikeButton sort2_button(sort2_text, 50);
+    sort2_button.setViewPosition(sf::Vector2f(420, 40));
+    UIwindow.push_back(sort2_button);
 
     sf::Text text("", font);
     text.setFillColor(sf::Color::Black);
     sfu::SimpleImage image(text);
-    image.setViewPosition(sf::Vector2f(400, 70));
+    image.setViewPosition(sf::Vector2f(600, 70));
     UIwindow.push_back(image);
 
     //////////////////////////////////////////////////
@@ -175,13 +181,50 @@ int main(int argc, char const *argv[])
             {
                 save_to_file();
             }
-            if (sortfile_button.isPressed(sf::Mouse::Button::Left))
+            if (sort2_button.isPressed(sf::Mouse::Button::Left))
             {
                 std::vector<std::string> res;
                 std::string tmp;
                 if (sort(res))
+                {
+                    size_t d = 1, index = 1;
                     for (auto &i : res)
+                    {
+                        -- d;
+                        if (d == 0)
+                        {
+                            tmp += "[" + std::to_string(index ++) + "] ";
+                            d = 3 + rand() % 3;
+                        }
                         tmp += i + " ";
+                    }
+                }
+                else
+                    tmp = "no solve";
+                text.setString(tmp);
+                image.setViewSize(sf::Vector2f(
+                    text.getLocalBounds().width * 2,
+                    text.getLocalBounds().height * 2
+                ));
+            }
+            if (sort_button.isPressed(sf::Mouse::Button::Left))
+            {
+                std::vector<std::string> res;
+                std::string tmp;
+                if (sort(res))
+                {
+                    size_t d = 1, index = 1;
+                    for (auto &i : res)
+                    {
+                        -- d;
+                        if (d == 0)
+                        {
+                            tmp += "[" + std::to_string(index ++) + "] ";
+                            d = 5 + rand() % 4;
+                        }
+                        tmp += i + " ";
+                    }
+                }
                 else
                     tmp = "no solve";
                 text.setString(tmp);
