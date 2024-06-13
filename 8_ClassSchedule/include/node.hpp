@@ -36,7 +36,9 @@ public:
     std::list<Edge*>& get_edge();
 
     int score;
+    
 protected:
+
     void processEvent(const sf::Event& event) override;
     void render(sf::RenderTarget &target) const override;
 
