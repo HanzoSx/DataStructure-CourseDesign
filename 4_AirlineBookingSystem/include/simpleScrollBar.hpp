@@ -2,6 +2,7 @@
 
 #include <Control.hpp>
 #include <DynamicParameter.hpp>
+#include <functional>
 
 class simpleScrollBar : public sfu::Control
 {
